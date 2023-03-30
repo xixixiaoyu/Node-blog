@@ -1,8 +1,12 @@
+const { exec } = reqire('../../db/mysql.js')
+
 const loginCheck = (username, password) => {
-	if (username === 'yunmu' && password === '123456') {
-		return true
-	}
-	return false
+  const sql = `
+		select username, realname from users where username='${username}' and password=${password};
+	`
+  return exec(sql).then(rows => {
+    return rows[0] || {}
+  })
 }
 
 module.exports = { loginCheck }

@@ -1,53 +1,76 @@
+const { exec } = reqire('../../db/mysql.js')
+
 const getList = (author, keyword) => {
-	// 假如传入成功
-	return [
-		{
-			id: 1,
-			title: '标题A',
-			content: '内容A',
-			createTime: 1552099988419,
-			author: '云牧',
-		},
-		{
-			id: 2,
-			title: '标题B',
-			content: '内容B',
-			createTime: 1552099988420,
-			author: '黛玉',
-		},
-	]
+  let sql = `select * from blogs where 1=1 `
+
+  if (author) {
+    sql += `and author=${author}`
+  }
+
+  if (keyword) {
+    sql += `and title like '%${keyword}%'`
+  }
+
+  sql += `order by craetetime desc;`
+
+  return exec(sql)
 }
 
 const getDetail = id => {
-	return [
-		{
-			id: 1,
-			title: '标题A',
-			content: '内容A',
-			createTime: 1552099988419,
-			author: '云牧',
-		},
-	]
+  const sql = `select * from blogs where id='${id}'`
+  return exec(sql).then(rows => {
+    return rows[0]
+  })
 }
 
 const newBlog = (blogData = {}) => {
-	return {
-		id: 3,
-	}
+  // blogData 是一个博客对象，包含 title content author 属性
+  const { title, content, author } = blogData
+  const createtime = Date.now()
+
+  const sql = `
+		insert into blogs (title, content, author, createtime)
+		values ('${title}', '${content}', '${author}', '${createtime}');
+	`
+
+  return exec(sql).then(insertData => {
+    return {
+      id: insertData.insertId
+    }
+  })
 }
 
 const updateBlog = (id, blogData = {}) => {
-	return true
+  const { title, content } = blogData
+  const sql = `
+		update blogs set title='${title}', content='${content}' where id='${id}'
+	`
+  return exec(sql).then(updateData => {
+    if (updateData.affectedRows > 0) {
+      return true
+    } else {
+      return false
+    }
+  })
 }
 
-const delBlog = id => {
-	return true
+const delBlog = (id, author) => {
+  const sql = `
+		delete from blogs where id='${id}' and author='${author}';
+	`
+  return exec(sql).then(delData => {
+    if (delData.affectedRows > 0) {
+      return true
+    } else {
+      return false
+    }
+  })
 }
 
 module.exports = {
-	getList,
-	getDetail,
-	newBlog,
-	updateBlog,
-	delBlog,
+  getList,
+  getDetail,
+  newBlog,
+  updateBlog,
+  delBlog
 }
