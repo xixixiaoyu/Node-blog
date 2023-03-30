@@ -1,5 +1,5 @@
 const redis = require('redis')
-const { REDIS_CONF } = require('./../conf/db.js')
+const { REDIS_CONF } = require('../conf/db.js')
 
 // REDIS_CONF = {
 //   host: '127.0.0.1',

@@ -1,8 +1,16 @@
 const queryString = require('querystring')
 const handleUserRouter = require('./src/router/user')
 const handleBlogRouter = require('./src/router/blog')
+const { access } = require('./src/utils/log')
 
 const serverHandle = (req, res) => {
+  // access logs
+  access(
+    `${new Date().toGMTString()} -- ${req.method} -- ${req.url} -- ${
+      req.headers['user-agent']
+    }`
+  )
+
   // 设置返回格式为 json
   res.setHeader('Content-type', 'application/json')
 
