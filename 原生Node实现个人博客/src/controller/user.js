@@ -1,4 +1,4 @@
-const { exec } = reqire('../../db/mysql.js')
+const { exec } = require('../db/mysql.js')
 
 const loginCheck = (username, password) => {
   const sql = `
