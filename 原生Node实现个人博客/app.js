@@ -12,23 +12,45 @@ const serverHandle = (req, res) => {
   // 解析 query
   req.query = queryString.parse(req.url.split('?')[1])
 
+  // 解析 cookie
   req.cookie = parseCookie(req.headers.cookie)
+
+  const [needSetCookie, session] = parseSession(req.cookie.userid)
+
+  req.session = session
 
   // 获取请求体内容
   getPostData(req).then(postData => {
     req.body = postData
 
     // 登录路由
-    const userData = handleUserRouter(req, res)
-    if (userData) {
-      res.end(JSON.stringify(userData))
+    const userResult = handleUserRouter(req, res)
+    if (userResult) {
+      userResult.then(userData => {
+        if (needSetCookie) {
+          res.setHeader(
+            'Set-Cookie',
+            `userid=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`
+          )
+        }
+        res.end(JSON.stringify(userData))
+      })
       return
     }
 
     // 博客路由
-    const blogData = handleBlogRouter(req, res)
-    if (blogData) {
-      res.end(JSON.stringify(blogData))
+    const blogResult = handleBlogRouter(req, res)
+    if (blogResult) {
+      blogResult.then(blogData => {
+        // 操作 cookie
+        if (needSetCookie) {
+          res.setHeader(
+            'Set-Cookie',
+            `userid=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`
+          )
+        }
+        res.end(JSON.stringify(blogData))
+      })
       return
     }
 
@@ -79,6 +101,31 @@ function parseCookie(cookie = '') {
   })
 
   return cookieObj
+}
+
+function parseSession(userId) {
+  const SESSION_DATA = {}
+
+  let needSetCookie = false
+
+  if (userId) {
+    if (!SESSION_DATA[userId]) {
+      SESSION_DATA[userId] = {}
+    } else {
+      needSetCookie = true
+      userId = `${Date.now()}_${Math.random()}`
+      SESSION_DATA[userId] = {}
+    }
+  }
+
+  return [needSetCookie, SESSION_DATA[userId]]
+}
+
+// 获取 cookie 过期时间
+function getCookieExpires() {
+  const d = new Date()
+  d.setTime(d.getTime() + 24 * 60 * 60 * 1000)
+  return d.toGMTString()
 }
 
 module.exports = serverHandle
